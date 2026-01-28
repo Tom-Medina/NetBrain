@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:upload-post.com)",
+      "WebSearch",
+      "WebFetch(domain:docs.upload-post.com)",
+      "Bash(ren \"Social-Code\\\\Social-Code.csproj\" \"NetBrain.csproj\")"
+    ]
+  }
+}

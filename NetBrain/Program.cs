@@ -17,6 +17,17 @@ app.MapGet("/ping", () =>
 
 Directory.CreateDirectory("queue");
 
+var telegramToken = builder.Configuration["Telegram:ApiKey"]
+                    ?? throw new Exception("Telegram:Token not set");
+
+var telegramChatId = long.Parse(
+    builder.Configuration["Telegram:User"]
+    ?? throw new Exception("Telegram:AdminChatId not set")
+);
+
+var telegram = new NetBrain.Telegram.Telegram(telegramToken, telegramChatId);
+telegram.Start();
+
 app.MapPost("/upload", async (HttpRequest request) =>
 {
     var form = await request.ReadFormAsync();

@@ -1,17 +1,26 @@
 using System.Net.Http.Headers;
 
+namespace NetBrain.Code;
+
 public class UploadPost
 {
     private readonly HttpClient _httpClient;
-    private readonly string _apiKey;
     private readonly string _user;
 
-    public UploadPost(string apiKey, string user)
+    public static UploadPost Init(WebApplicationBuilder webApplicationBuilder)
     {
-        _apiKey = apiKey;
+        var apiKey = webApplicationBuilder.Configuration["UploadPost:ApiKey"] ??
+                     throw new Exception("UploadPost:ApiKey not set");
+        var uploadPostUser = webApplicationBuilder.Configuration["UploadPost:User"] ??
+                             throw new Exception("UploadPost:User not set");
+        return new UploadPost(apiKey, uploadPostUser);
+    }
+
+    private UploadPost(string apiKey, string user)
+    {
         _user = user;
         _httpClient = new HttpClient();
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Apikey", _apiKey);
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Apikey", apiKey);
     }
 
     public async Task<HttpResponseMessage> UploadVideoAsync(string videoPath, string title, string platform)

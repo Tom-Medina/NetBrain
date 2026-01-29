@@ -1,3 +1,4 @@
+using NetBrain.Code.Commands;
 using NetBrain.Utils;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -9,11 +10,20 @@ public class Telegram
 {
     private readonly TelegramBotClient _bot;
     private readonly long _adminChatId;
+    private readonly TelegramRegistry _commands;
 
-    public Telegram(string token, long adminChatId)
+    public Telegram(WebApplicationBuilder builder, TelegramRegistry commands)
     {
-        _bot = new TelegramBotClient(token);
-        _adminChatId = adminChatId;
+        var telegramToken = builder.Configuration["Telegram:ApiKey"]
+                            ?? throw new Exception("Telegram:Token not set");
+
+        _adminChatId = long.Parse(
+            builder.Configuration["Telegram:User"]
+            ?? throw new Exception("Telegram:AdminChatId not set")
+        );
+
+        _bot = new TelegramBotClient(telegramToken);
+        _commands = commands;
     }
 
     public void Start()
@@ -30,9 +40,7 @@ public class Telegram
     private async Task HandleUpdate(ITelegramBotClient bot, Update update, CancellationToken ct)
     {
         if (update.Type != UpdateType.Message)
-        {
             return;
-        }
 
         var msg = update.Message;
         if (msg?.Text == null)
@@ -41,31 +49,26 @@ public class Telegram
         if (msg.Chat.Id != _adminChatId)
             return;
 
-        if (msg.Text == "/ping")
-        {
-            await bot.SendMessage(
-                msg.Chat.Id,
-                "Pong",
-                cancellationToken: ct
-            );
-        }
+        var parts = msg.Text.Split(' ');
+        var commandName = parts[0];
+        var args = parts.Skip(1).ToArray();
 
-        if (msg.Text == "/ip")
-        {
-            await bot.SendMessage(msg.Chat.Id, NetworkUtility.GetLocalIpAddress(), cancellationToken: ct);
-        }
+        var command = _commands.Get(commandName);
+        if (command == null)
+            return;
+
+        var result = await command.ExecuteAsync(args);
+        await bot.SendMessage(msg.Chat.Id, result, cancellationToken: ct);
     }
 
-    private Task HandleError(ITelegramBotClient bot,
-        Exception ex,
-        CancellationToken ct)
+    private Task HandleError(ITelegramBotClient bot, Exception ex, CancellationToken ct)
     {
         Console.WriteLine($"Telegram error: {ex.Message}");
         return Task.CompletedTask;
     }
 
-    public Task NotifyAsync(string message)
+    private void NotifyAsync(string message)
     {
-        return _bot.SendMessage(_adminChatId, message);
+        _bot.SendMessage(_adminChatId, message);
     }
 }

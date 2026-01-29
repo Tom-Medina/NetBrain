@@ -2,10 +2,17 @@ using Microsoft.AspNetCore.Http;
 
 namespace NetBrain.Code.Commands;
 
-public class UploadCommand(UploadPost uploadPost) : IEndpointCommand
+public class UploadCommand : IEndpointCommand
 {
     public string Name => "/upload";
     public HttpMethod Method => HttpMethod.Post;
+
+    private readonly VideoStock _videoStock;
+
+    public UploadCommand(VideoStock videoStock)
+    {
+        _videoStock = videoStock;
+    }
 
     public async Task<IResult> ExecuteAsync(HttpRequest request)
     {
@@ -14,25 +21,39 @@ public class UploadCommand(UploadPost uploadPost) : IEndpointCommand
         var file = form.Files["video"];
         if (file == null) return Results.BadRequest("No video provided");
 
-        var text = form["text"];
-        var platform = form["platform"];
+        var title = form["title"];
+        var description = form["description"];
+        var platforms = form["platforms"].ToString().Split(',').Select(p => p.Trim()).ToList();
 
-        var savePath = Path.Combine("queue", file.FileName);
-
-        await using (var stream = File.Create(savePath))
+        // Créer l'objet VideoUpload
+        var videoUpdate = new VideoUpload
         {
-            await file.CopyToAsync(stream);
+            Title = title,
+            Description = description,
+            Platforms = platforms
+        };
+
+        // Ajouter le variant correspondant au fichier reçu
+        await using (var memoryStream = new MemoryStream())
+        {
+            await file.CopyToAsync(memoryStream);
+            videoUpdate.Variants.Add(new VideoVariant
+            {
+                FileName = file.FileName,
+                Format = "original",
+                Data = memoryStream.ToArray() // On stocke les bytes dans le variant pour VideoStock
+            });
         }
 
-        Console.WriteLine($"Received video: {file.FileName}, text: {text}, platform: {platform}");
+        // Ajouter la vidéo au stock, VideoStock se charge de tout le stockage physique via StorageUtility
+        _videoStock.AddVideo(videoUpdate);
 
-        var response = await uploadPost.UploadVideoAsync(savePath, text!, platform!);
-        var responseBody = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"Video '{videoUpdate.Title}' added to stock with ID {videoUpdate.Id}");
 
-        if (!response.IsSuccessStatusCode)
-            return Results.Problem($"Upload failed: {responseBody}", statusCode: (int)response.StatusCode);
-
-        Console.WriteLine("Upload complete");
-        return Results.Ok(new { status = "ok", path = savePath, uploadPost = responseBody });
+        return Results.Ok(new
+        {
+            status = "ok",
+            id = videoUpdate.Id
+        });
     }
 }

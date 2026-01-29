@@ -67,7 +67,7 @@ public class Telegram
         return Task.CompletedTask;
     }
 
-    private void NotifyAsync(string message)
+    public void NotifyAsync(string message)
     {
         _bot.SendMessage(_adminChatId, message);
     }

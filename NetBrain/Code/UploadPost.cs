@@ -1,4 +1,6 @@
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace NetBrain.Code;
 
@@ -35,8 +37,49 @@ public class UploadPost
         content.Add(new StringContent(_user), "user");
         content.Add(new StringContent(title), "title");
         content.Add(new StringContent(platform), "platform[]");
+        content.Add(new StringContent("tommedina_games"), "subreddit");
 
         var response = await _httpClient.PostAsync("https://api.upload-post.com/api/upload", content);
         return response;
+    }
+
+    public async Task<List<PlatformStats>> GetAnalyticsAsync()
+    {
+        var platforms = "youtube,reddit,x";
+        var response =
+            await _httpClient.GetAsync($"https://api.upload-post.com/api/analytics/{_user}?platforms={platforms}");
+
+        var json = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+            throw new Exception($"API error {response.StatusCode}: {json}");
+
+        var result = new List<PlatformStats>();
+        using var doc = JsonDocument.Parse(json);
+
+        foreach (var platform in doc.RootElement.EnumerateObject())
+        {
+            var data = platform.Value;
+            if (data.TryGetProperty("followers", out _))
+            {
+                result.Add(new PlatformStats
+                {
+                    Platform = platform.Name,
+                    Followers = data.GetProperty("followers").GetInt32(),
+                    Impressions = data.GetProperty("impressions").GetInt32(),
+                });
+            }
+        }
+
+        return result;
+    }
+
+    public class PlatformStats
+    {
+        public string Platform { get; set; } = "";
+        public int Followers { get; set; }
+        public int Impressions { get; set; }
+        public int ProfileViews { get; set; }
+        public int Reach { get; set; }
     }
 }

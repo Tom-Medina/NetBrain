@@ -17,7 +17,7 @@ public class VideoUploader
 
     public async Task<string> PostByIndexAsync(int index)
     {
-        var videos = _videoStock.Videos.Reverse().Take(5).ToList();
+        var videos = GetVideoByIndex();
 
         if (index < 0 || index >= videos.Count)
             return $"Invalid index {index}. Use /stock to see available videos.";
@@ -47,7 +47,8 @@ public class VideoUploader
             }
             else
             {
-                errors.Add($"{platform}: {response.StatusCode}");
+                var errorBody = await response.Content.ReadAsStringAsync();
+                errors.Add($"{platform}: {response.StatusCode} - {errorBody}");
             }
         }
 
@@ -63,6 +64,13 @@ public class VideoUploader
         video.Status = VideoStatus.Failed;
         _videoStock.UpdateVideo(video);
 
-        return $"Partial upload for '{video.Title}'.\nSuccess: {string.Join(", ", platformsToRemove)}\nFailed: {string.Join(", ", errors)}";
+        return
+            $"Partial upload for '{video.Title}'.\nSuccess: {string.Join(", ", platformsToRemove)}\nFailed: {string.Join(", ", errors)}";
+    }
+
+    public List<VideoUpload> GetVideoByIndex()
+    {
+        var videos = _videoStock.Videos.Reverse().Take(5).ToList();
+        return videos;
     }
 }

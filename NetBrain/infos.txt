@@ -1,2 +1,7 @@
 to run : 
+
+New: 
+dotnet publish -c Release -r linux-arm
+
+Old:
 dotnet publish -c Release -r linux-arm --self-contained   

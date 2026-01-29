@@ -2,17 +2,10 @@ using Microsoft.AspNetCore.Http;
 
 namespace NetBrain.Code.Commands;
 
-public class UploadCommand : IEndpointCommand
+public class UploadCommand(VideoStock videoStock) : IEndpointCommand
 {
     public string Name => "/upload";
     public HttpMethod Method => HttpMethod.Post;
-
-    private readonly VideoStock _videoStock;
-
-    public UploadCommand(VideoStock videoStock)
-    {
-        _videoStock = videoStock;
-    }
 
     public async Task<IResult> ExecuteAsync(HttpRequest request)
     {
@@ -25,7 +18,6 @@ public class UploadCommand : IEndpointCommand
         var description = form["description"];
         var platforms = form["platforms"].ToString().Split(',').Select(p => p.Trim()).ToList();
 
-        // Créer l'objet VideoUpload
         var videoUpdate = new VideoUpload
         {
             Title = title,
@@ -46,7 +38,7 @@ public class UploadCommand : IEndpointCommand
         }
 
         // Ajouter la vidéo au stock, VideoStock se charge de tout le stockage physique via StorageUtility
-        _videoStock.AddVideo(videoUpdate);
+        videoStock.AddVideo(videoUpdate);
 
         Console.WriteLine($"Video '{videoUpdate.Title}' added to stock with ID {videoUpdate.Id}");
 

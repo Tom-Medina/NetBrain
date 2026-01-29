@@ -9,6 +9,7 @@ mkdir -p $APP_DIR
 cp -r $USB_PATH/* $APP_DIR/
 sudo umount $USB_PATH
 cd $APP_DIR/publish
+
+export PATH=$PATH:$HOME/.dotnet
 chmod +x $EXE
-./$EXE
- 
+dotnet NetBrain.dll  

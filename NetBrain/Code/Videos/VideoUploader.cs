@@ -68,6 +68,40 @@ public class VideoUploader
             $"Partial upload for '{video.Title}'.\nSuccess: {string.Join(", ", platformsToRemove)}\nFailed: {string.Join(", ", errors)}";
     }
 
+    public async Task<string> PostSinglePlatformAsync(VideoUpload video, string platform)
+    {
+        var variant = video.Variants.FirstOrDefault();
+
+        if (variant == null)
+            return $"No video file found for '{video.Title}'.";
+
+        var videoPath = Path.Combine(_videosPath, video.Id, variant.FileName);
+
+        if (!File.Exists(videoPath))
+            return $"Video file not found: {variant.FileName}";
+
+        var response = await _uploadPost.UploadVideoAsync(videoPath, video.Title, platform);
+
+        if (response.IsSuccessStatusCode)
+        {
+            video.Platforms.Remove(platform);
+
+            if (video.Platforms.Count == 0)
+            {
+                _videoStock.RemoveVideo(video.Id);
+                return $"Uploaded '{video.Title}' → {platform}. All platforms done, video removed.";
+            }
+
+            _videoStock.UpdateVideo(video);
+            return $"Uploaded '{video.Title}' → {platform}. Remaining: {string.Join(", ", video.Platforms)}";
+        }
+
+        var errorBody = await response.Content.ReadAsStringAsync();
+        video.Status = VideoStatus.Failed;
+        _videoStock.UpdateVideo(video);
+        return $"Failed '{video.Title}' → {platform}: {response.StatusCode} - {errorBody}";
+    }
+
     public List<VideoUpload> GetVideoByIndex()
     {
         var videos = _videoStock.Videos.Reverse().Take(5).ToList();

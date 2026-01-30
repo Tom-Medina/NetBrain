@@ -1,5 +1,6 @@
 using NetBrain.Code;
 using NetBrain.Code.API;
+using NetBrain.Code.Clock;
 using NetBrain.Code.Commands;
 using NetBrain.Code.Videos;
 using NetBrain.Utils;
@@ -30,8 +31,11 @@ var telegram = new NetBrain.Telegram.Telegram(builder, telegramCommands);
 videoStock.SetTelegram(telegram);
 
 var videoUploader = new VideoUploader(uploadPost, videoStock, telegram, videosPath);
-var postCommand = new PostCommand(videoUploader);
+var postScheduler = new PostScheduler(videoUploader, videoStock, telegram, clock);
+var postCommand = new PostCommand(videoUploader, telegram);
+var nextCommand = new NextCommand(postScheduler);
 telegramCommands.Register(postCommand);
+telegramCommands.Register(nextCommand);
 
 var endpoints = new EndpointRegistry()
     .Register(pingCommand)
@@ -39,11 +43,10 @@ var endpoints = new EndpointRegistry()
     .Register(new UploadCommand(videoStock))
     .Register(stockCommand)
     .Register(abortCommand)
-    .Register(postCommand).Register(statsCommand);
+    .Register(postCommand).Register(statsCommand)
+    .Register(nextCommand);
 
 telegram.Start();
-
-var postScheduler = new PostScheduler(telegram, clock);
 
 var server = new Server(builder, endpoints);
 server.Start();

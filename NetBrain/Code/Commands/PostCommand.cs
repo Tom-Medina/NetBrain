@@ -3,8 +3,9 @@ using NetBrain.Code.Videos;
 
 namespace NetBrain.Code.Commands;
 
-public class PostCommand(VideoUploader videoUploader) : IEndpointCommand, ITelegramCommand
+public class PostCommand(VideoUploader videoUploader, Telegram.Telegram telegram) : IEndpointCommand, ITelegramCommand
 {
+    public Telegram.Telegram Telegram { get; } = telegram;
     public string Name => "/post";
     public HttpMethod Method => HttpMethod.Post;
 

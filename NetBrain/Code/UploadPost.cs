@@ -8,6 +8,7 @@ public class UploadPost
 {
     private readonly HttpClient _httpClient;
     private readonly string _user;
+    private readonly Reddit _reddit = new();
 
     public static UploadPost Init(WebApplicationBuilder webApplicationBuilder)
     {
@@ -37,7 +38,7 @@ public class UploadPost
         content.Add(new StringContent(_user), "user");
         content.Add(new StringContent(title), "title");
         content.Add(new StringContent(platform), "platform[]");
-        content.Add(new StringContent("tommedina_games"), "subreddit");
+        content.Add(new StringContent(_reddit.GetNextSubreddit()), "subreddit");
 
         var response = await _httpClient.PostAsync("https://api.upload-post.com/api/upload", content);
         return response;

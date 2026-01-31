@@ -21,13 +21,15 @@ var ipCommand = new IpCommand();
 var stockCommand = new StockCommand(videoStock);
 var abortCommand = new AbortCommand(videoStock);
 var statsCommand = new StatsCommand(uploadPost);
+var updateCommand = new UpdateCommand();
 
 var telegramCommands = new TelegramRegistry()
     .Register(pingCommand)
     .Register(ipCommand)
     .Register(stockCommand)
     .Register(abortCommand)
-    .Register(statsCommand);
+    .Register(statsCommand)
+    .Register(updateCommand);
 
 var telegram = new NetBrain.Telegram.Telegram(builder, telegramCommands);
 videoStock.SetTelegram(telegram);

@@ -28,7 +28,7 @@ public class PostScheduler : IClockListener
     {
         var today = now.ToString("yyyy-MM-dd");
 
-        if (_state.LastDate != today)
+        if (_state.LastDate != today)   
         {
             _state.LastDate = today;
             _state.PostedToday.Clear();
@@ -100,7 +100,7 @@ public class PostScheduler : IClockListener
     private VideoUpload? FindVideoForPlatform(string platform)
     {
         return _videoStock.GetPendingVideos()
-            .FirstOrDefault(v => v.Platforms.Contains(platform));
+            .FirstOrDefault(v => v.Platforms.Any(p => p.Equals(platform, StringComparison.OrdinalIgnoreCase)));
     }
 
     public (string Platform, Region Region, TimeOnly PostTime)? GetNextPost(int skip = 0)

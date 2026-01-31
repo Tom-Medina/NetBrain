@@ -10,6 +10,8 @@ var builder = WebApplication.CreateBuilder();
 var videosPath = Path.Combine(StorageUtility.GetPersistentDataPath(), "videos");
 var videoStock = new VideoStock(videosPath);
 var uploadPost = UploadPost.Init(builder);
+var uploadVk = UploadVk.Init(builder);
+var uploadDecider = new UploadDecider(uploadPost, uploadVk);
 
 var clock = new Clock(TimeSpan.FromSeconds(1));
 clock.Start();
@@ -30,7 +32,7 @@ var telegramCommands = new TelegramRegistry()
 var telegram = new NetBrain.Telegram.Telegram(builder, telegramCommands);
 videoStock.SetTelegram(telegram);
 
-var videoUploader = new VideoUploader(uploadPost, videoStock, telegram, videosPath);
+var videoUploader = new VideoUploader(uploadDecider, videoStock, telegram, videosPath);
 var postScheduler = new PostScheduler(videoUploader, videoStock, telegram, clock);
 var postCommand = new PostCommand(videoUploader, telegram);
 var nextCommand = new NextCommand(postScheduler);

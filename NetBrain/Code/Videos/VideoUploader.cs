@@ -2,14 +2,14 @@ namespace NetBrain.Code.Videos;
 
 public class VideoUploader
 {
-    private readonly UploadPost _uploadPost;
+    private readonly UploadDecider _uploadDecider;
     private readonly VideoStock _videoStock;
     private readonly Telegram.Telegram _telegram;
     private readonly string _videosPath;
 
-    public VideoUploader(UploadPost uploadPost, VideoStock videoStock, Telegram.Telegram telegram, string videosPath)
+    public VideoUploader(UploadDecider uploadDecider, VideoStock videoStock, Telegram.Telegram telegram, string videosPath)
     {
-        _uploadPost = uploadPost;
+        _uploadDecider = uploadDecider;
         _videoStock = videoStock;
         _telegram = telegram;
         _videosPath = videosPath;
@@ -38,7 +38,7 @@ public class VideoUploader
 
         foreach (var platform in video.Platforms.ToList())
         {
-            var response = await _uploadPost.UploadVideoAsync(videoPath, video.Title, platform);
+            var response = await _uploadDecider.UploadVideoAsync(videoPath, video.Title, video.Description, platform);
 
             if (response.IsSuccessStatusCode)
             {
@@ -80,7 +80,7 @@ public class VideoUploader
         if (!File.Exists(videoPath))
             return $"Video file not found: {variant.FileName}";
 
-        var response = await _uploadPost.UploadVideoAsync(videoPath, video.Title, platform);
+        var response = await _uploadDecider.UploadVideoAsync(videoPath, video.Title, video.Description, platform);
 
         if (response.IsSuccessStatusCode)
         {

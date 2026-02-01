@@ -1,19 +1,17 @@
 #!/bin/bash
-APP_DIR=~/NetBrain/app
-REPO="tomme/NetBrain"
-ZIP_URL="https://github.com/Tom-Medina/NetBrain/releases/download/latest/netbrain-linux-arm.zip"
-TMP_ZIP="/tmp/netbrain-linux-arm.zip"
+REPO_DIR=~/NetBrain/repo
+APP_DIR=$REPO_DIR/publish
 
-mkdir -p $APP_DIR
+export PATH=$PATH:$HOME/.dotnet
 
-curl -sL "$ZIP_URL" -o "$TMP_ZIP"
-unzip -o "$TMP_ZIP" -d "$APP_DIR"
-rm "$TMP_ZIP"
+cd $REPO_DIR
+git pull
 
 pkill -f "dotnet NetBrain.dll" || true
 sleep 1
 
 cd $APP_DIR
 chmod +x NetBrain
+cp ~/NetBrain/appsettings.json $APP_DIR/appsettings.json
 nohup dotnet NetBrain.dll > ~/NetBrain/log.txt 2>&1 &
 echo "NetBrain updated and restarted."

@@ -54,7 +54,7 @@ var endpoints = new EndpointRegistry()
     .Register(untilCommand);
 
 
-Console.WriteLine("updated");
+Console.WriteLine("updated"); 
 telegram.Start();
 
 var server = new Server(builder, endpoints);

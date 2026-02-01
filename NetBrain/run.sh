@@ -15,4 +15,4 @@ sleep 1
 cd $APP_DIR
 chmod +x NetBrain
 nohup dotnet NetBrain.dll > ~/NetBrain/log.txt 2>&1 &
-echo "NetBrain updated and restarted."
+echo "NetBrain updated and restarted." 

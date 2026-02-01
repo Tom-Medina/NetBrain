@@ -1,15 +1,18 @@
 #!/bin/bash
-USB_PATH=/mnt/usb
-APP_DIR=~/NetBrain
-USB_DEV=/dev/sda1
-EXE=NetBrain
-mount | grep $USB_PATH >/dev/null || sudo mount $USB_DEV $USB_PATH
+APP_DIR=~/NetBrain/app
+ZIP_URL="https://github.com/Tom-Medina/NetBrain/releases/download/latest/netbrain-linux-arm.zip"
+TMP_ZIP="/tmp/netbrain-linux-arm.zip"
 
 mkdir -p $APP_DIR
-cp -r $USB_PATH/* $APP_DIR/
-sudo umount $USB_PATH
-cd $APP_DIR/publish
 
-export PATH=$PATH:$HOME/.dotnet
-chmod +x $EXE
-dotnet NetBrain.dll  
+curl -sL "$ZIP_URL" -o "$TMP_ZIP"
+unzip -o "$TMP_ZIP" -d "$APP_DIR"
+rm "$TMP_ZIP"
+
+pkill -f "dotnet NetBrain.dll" || true
+sleep 1
+
+cd $APP_DIR
+chmod +x NetBrain
+nohup dotnet NetBrain.dll > ~/NetBrain/log.txt 2>&1 &
+echo "NetBrain updated and restarted."

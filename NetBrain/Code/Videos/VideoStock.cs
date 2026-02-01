@@ -127,7 +127,7 @@ public class VideoStock
     public List<VideoUpload> GetPendingVideos()
     {
         return _videos.Values
-            .Where(v => v.Status == VideoStatus.Queued || v.Status == VideoStatus.Scheduled)
+            .Where(v => v.Status == VideoStatus.Queued || v.Status == VideoStatus.Scheduled || v.Status == VideoStatus.Failed)
             .OrderBy(v => v.ScheduledTime ?? DateTime.MaxValue)
             .ToList();
     }

@@ -10,13 +10,11 @@ public class StockCommand(VideoStock videoStock) : IEndpointCommand, ITelegramCo
     // Endpoint HTTP
     public Task<IResult> ExecuteAsync(HttpRequest request)
     {
-        var videos = videoStock.Videos.Reverse().Take(5);
-
-        var result = videos.Select((video, index) => new
+        var result = videoStock.Videos.SelectMany((video, index) =>
         {
-            index,
-            title = video.Title,
-            file = video.Variants.FirstOrDefault()?.FileName ?? "no-file"
+            var shortTitle = video.Title.Length > 5 ? video.Title[..5] + ".." : video.Title;
+            var platforms = video.Platforms.Any() ? video.Platforms : ["none"];
+            return platforms.Select(p => new { index, title = shortTitle, platform = p });
         });
 
         return Task.FromResult(Results.Ok(result) as IResult);
@@ -25,30 +23,18 @@ public class StockCommand(VideoStock videoStock) : IEndpointCommand, ITelegramCo
     // Telegram
     public Task<string> ExecuteAsync(string[] args)
     {
-        var videos = videoStock.Videos.Reverse().Take(5).ToList();
+        var videos = videoStock.Videos.ToList();
 
         if (!videos.Any())
             return Task.FromResult("No video in stock.");
 
-        var lines = videos.Select((video, index) =>
+        var lines = videos.SelectMany((video, index) =>
         {
-            var platforms = video.Platforms.Any() ? string.Join(", ", video.Platforms) : "none";
-            var variants = video.Variants.Any()
-                ? string.Join(", ", video.Variants.Select(v => $"{v.FileName} ({v.Format})"))
-                : "none";
-            var scheduled = video.ScheduledTime?.ToString("yyyy-MM-dd HH:mm") ?? "not scheduled";
-
-            return $"""
-                [{index}] {video.Title}
-                Id: {video.Id}
-                Description: {video.Description}
-                Platforms: {platforms}
-                Variants: {variants}
-                Scheduled: {scheduled}
-                Status: {video.Status}
-                """;
+            var shortTitle = video.Title.Length > 5 ? video.Title[..5] + ".." : video.Title;
+            var platforms = video.Platforms.Any() ? video.Platforms : ["none"];
+            return platforms.Select(p => $"{index} : {shortTitle} {p}");
         });
 
-        return Task.FromResult(string.Join("\n\n", lines));
+        return Task.FromResult(string.Join("\n", lines));
     }
 }

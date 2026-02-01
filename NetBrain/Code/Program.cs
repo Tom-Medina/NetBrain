@@ -38,8 +38,10 @@ var videoUploader = new VideoUploader(uploadDecider, videoStock, telegram, video
 var postScheduler = new PostScheduler(videoUploader, videoStock, telegram, clock);
 var postCommand = new PostCommand(videoUploader, telegram);
 var nextCommand = new NextCommand(postScheduler);
+var untilCommand = new UntilCommand(videoStock);
 telegramCommands.Register(postCommand);
 telegramCommands.Register(nextCommand);
+telegramCommands.Register(untilCommand);
 
 var endpoints = new EndpointRegistry()
     .Register(pingCommand)
@@ -48,7 +50,8 @@ var endpoints = new EndpointRegistry()
     .Register(stockCommand)
     .Register(abortCommand)
     .Register(postCommand).Register(statsCommand)
-    .Register(nextCommand);
+    .Register(nextCommand)
+    .Register(untilCommand);
 
 telegram.Start();
 

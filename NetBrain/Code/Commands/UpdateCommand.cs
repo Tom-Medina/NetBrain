@@ -21,6 +21,6 @@ public class UpdateCommand : ITelegramCommand
 
         Process.Start(process);
 
-        return Task.FromResult("Updating... The bot will restart shortly.");
+        return Task.FromResult("Updating...");
     }
 }
